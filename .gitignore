@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vscode/
+.DS_Store
+Thumbs.db
+src-tauri/target/
+src-tauri/gen/
+*.log
+
+# Keep OCR models committed
+!public/tesseract/

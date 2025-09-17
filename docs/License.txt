@@ -1,0 +1,2 @@
+MIT
+'@ | Set-Content README.md

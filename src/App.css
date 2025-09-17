@@ -1,0 +1,127 @@
+/* ===== Base / theme ===== */
+:root{
+  --bg:#0f1115; --panel:#151922; --panel-2:#0f131c;
+  --text:#e6edf3; --muted:#9aa4b2; --border:#232834; --accent:#4f46e5;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body,#root{ height:100%; }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,"Noto Sans",sans-serif;
+}
+a{ color:inherit; text-decoration:none; }
+code,kbd{ background:#0002; padding:2px 6px; border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+
+/* ===== App shell (sidebar + main) ===== */
+.app-root{
+  height:100%;
+  display:grid;
+  grid-template-columns: 240px 1fr;
+}
+.app-main{
+  display:grid;
+  grid-template-rows: auto 1fr;    /* topbar + content */
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  min-width:0;
+}
+.app-content{
+  min-width:0; min-height:0;
+  overflow:auto;
+  padding:16px;
+  background: var(--panel-2);
+  border-top:1px solid var(--border);
+}
+
+/* collapse to single column (use .app-root.no-sidebar when you remove Sidebar) */
+.app-root.no-sidebar{ grid-template-columns: 1fr; }
+
+/* ===== Sidebar ===== */
+.sidebar{
+  background: var(--panel);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+}
+.sidebar-title{
+  font-weight:700; letter-spacing:.3px;
+  padding:14px 12px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-nav{ display:grid; gap:8px; padding:12px; }
+.nav-btn{
+  text-align:left;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#0d1320;
+  color:var(--text);
+  cursor:pointer;
+}
+.nav-btn:hover{ border-color:#334155; }
+.nav-btn.active{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent), transparent 40%);
+  background:#111831;
+}
+.sidebar-footer{
+  margin-top:auto; padding:12px;
+  color:var(--muted);
+  border-top:1px solid var(--border);
+}
+
+/* ===== Topbar ===== */
+.topbar, .app-topbar{
+  height:52px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 14px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#141925,#101521 60%);
+  backdrop-filter: blur(6px);
+}
+.topbar-left,.topbar-right{ display:flex; gap:8px; align-items:center; }
+.status-text{ color:var(--muted); }
+
+/* ===== Controls (GLOBAL) — makes Capture/Summarize/Explain look right ===== */
+:where(button,input,select,textarea){ font:inherit; }
+button{
+  -webkit-appearance:none; appearance:none;
+  border:1px solid var(--border);
+  background:#101625;
+  color:var(--text);
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:border-color .15s, transform .02s, background .15s;
+}
+button:hover{ border-color:#334155; background:#0f1523; }
+button:active{ transform:translateY(1px); }
+button:disabled{ opacity:.6; cursor:not-allowed; }
+
+.actions { margin-bottom: 8px; }
+
+textarea,input,select{
+  width:100%;
+  color:var(--text);
+  background:#0e1421;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 12px;
+  outline:none;
+}
+textarea{ resize:vertical; min-height:120px; }
+textarea:focus,input:focus,select:focus{ border-color:#334155; }
+::placeholder{ color:#91a1b3cc; }
+
+/* ===== Simple page utilities ===== */
+.page{ display:grid; gap:12px; }
+.page-title{ margin:0; font-weight:700; }
+.actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Card-like panel for inputs/outputs */
+.panel{
+  background:#0e1421;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+}
