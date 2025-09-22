@@ -39,7 +39,7 @@ jobs:
           Write-Host "Using CI config at $ciConf:"
           Get-Content $ciConf | Write-Host
 
-      # Ensure there is something to bundle
+      # Ensure there's something to bundle
       - name: Ensure dist exists (fallback)
         shell: pwsh
         run: |
