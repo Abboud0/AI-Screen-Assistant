@@ -4,15 +4,12 @@
   "version": "0.1.0",
   "identifier": "com.abbou.glint",
   "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devUrl": null,
     "frontendDist": "../dist"
   },
   "app": {
     "security": { "csp": null },
     "windows": [
-      { "label": "main", "title": "AI Screen Helper v1.0.0", "url": "index.html" }
+      { "label": "main", "title": "AI Screen Helper v0.1.0", "url": "index.html" }
     ]
   }
 }
