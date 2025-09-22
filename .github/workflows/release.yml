@@ -1,6 +1,18 @@
+name: Build & Release (Tauri - Windows)
+
+on:
+  push:
+    tags:
+      - 'v*'                # runs when you push a tag like v0.1.0
+  workflow_dispatch: {}      # allows manual runs from the Actions tab
+
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,10 +37,10 @@ jobs:
           $json = Get-Content $confPath -Raw | ConvertFrom-Json
           if ($null -eq $json.build) { $json | Add-Member -MemberType NoteProperty -Name build -Value (@{}) }
 
-          # Remove fields instead of setting empty strings
-          if ($json.build.PSObject.Properties.Name -contains 'beforeDevCommand')    { $json.build.PSObject.Properties.Remove('beforeDevCommand') }
-          if ($json.build.PSObject.Properties.Name -contains 'beforeBuildCommand')  { $json.build.PSObject.Properties.Remove('beforeBuildCommand') }
-          if ($json.build.PSObject.Properties.Name -contains 'devUrl')              { $json.build.PSObject.Properties.Remove('devUrl') }
+          # Remove the hooks so nothing calls npm
+          if ($json.build.PSObject.Properties.Name -contains 'beforeDevCommand')   { $json.build.PSObject.Properties.Remove('beforeDevCommand') }
+          if ($json.build.PSObject.Properties.Name -contains 'beforeBuildCommand') { $json.build.PSObject.Properties.Remove('beforeBuildCommand') }
+          if ($json.build.PSObject.Properties.Name -contains 'devUrl')             { $json.build.PSObject.Properties.Remove('devUrl') }
 
           if ($null -eq $json.build.frontendDist -or "$($json.build.frontendDist)".Trim() -eq "") {
             $json.build | Add-Member -NotePropertyName frontendDist -NotePropertyValue "../dist"
@@ -39,16 +51,16 @@ jobs:
           Write-Host "Using CI config at $ciConf:"
           Get-Content $ciConf | Write-Host
 
-      # Ensure there's something to bundle
+      # Ensure there is something to bundle
       - name: Ensure dist exists (fallback)
         shell: pwsh
         run: |
           if (!(Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" | Out-Null }
           if (!(Test-Path "dist/index.html")) {
             @"
-            <!doctype html>
-            <html><head><meta charset="utf-8"><title>Glint</title></head>
-            <body><h1>Glint</h1><p>CI fallback page.</p></body></html>
+              <!doctype html>
+              <html><head><meta charset="utf-8"><title>Glint</title></head>
+              <body><h1>Glint</h1><p>CI fallback page.</p></body></html>
           "@ | Set-Content "dist/index.html" -Encoding UTF8
           }
           Write-Host "Dist contents:"; Get-ChildItem -Recurse dist | Select-Object FullName
@@ -58,6 +70,7 @@ jobs:
         shell: pwsh
         run: |
           npm i -g @tauri-apps/cli@v2
+          tauri --version
           tauri build --config src-tauri/tauri.ci.conf.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
