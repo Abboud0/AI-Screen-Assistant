@@ -37,7 +37,7 @@ jobs:
           $json = Get-Content $confPath -Raw | ConvertFrom-Json
           if ($null -eq $json.build) { $json | Add-Member -MemberType NoteProperty -Name build -Value (@{}) }
 
-          # Remove the hooks so nothing calls npm
+          # Remove hooks so nothing calls npm
           if ($json.build.PSObject.Properties.Name -contains 'beforeDevCommand')   { $json.build.PSObject.Properties.Remove('beforeDevCommand') }
           if ($json.build.PSObject.Properties.Name -contains 'beforeBuildCommand') { $json.build.PSObject.Properties.Remove('beforeBuildCommand') }
           if ($json.build.PSObject.Properties.Name -contains 'devUrl')             { $json.build.PSObject.Properties.Remove('devUrl') }
@@ -48,8 +48,9 @@ jobs:
 
           $ciConf = "src-tauri/tauri.ci.conf.json"
           $json | ConvertTo-Json -Depth 20 | Set-Content $ciConf -Encoding UTF8
-          Write-Host "Using CI config at $ciConf:"
+          Write-Host "Using CI config at ${ciConf}:"
           Get-Content $ciConf | Write-Host
+
 
       # Ensure there is something to bundle
       - name: Ensure dist exists (fallback)
