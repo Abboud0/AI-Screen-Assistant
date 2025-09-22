@@ -56,6 +56,9 @@ jobs:
           Write-Host "Using CI config at ${ciConf}:"
           Get-Content $ciConf | Write-Host
 
+      - name: Overwrite tauri.conf.json with CI config (safety)
+        shell: pwsh
+        run: Copy-Item -Force "src-tauri/tauri.ci.conf.json" "src-tauri/tauri.conf.json"
 
       # Ensure there is something to bundle
       - name: Ensure dist exists (fallback)
