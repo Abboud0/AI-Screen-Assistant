@@ -72,14 +72,11 @@ jobs:
           Write-Host "Dist contents:"; Get-ChildItem -Recurse dist | Select-Object FullName
 
       # Build with the CI config explicitly
-      - name: Build Tauri (Windows, explicit config)
-        shell: pwsh
-        run: |
-          npm i -g @tauri-apps/cli@v2
-          tauri --version
-          tauri build --config src-tauri/tauri.ci.conf.json
+      - name: Build Tauri (Windows) via action
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_CONFIG: src-tauri/tauri.ci.conf.json
 
       - name: Upload build artifacts
         if: always()
