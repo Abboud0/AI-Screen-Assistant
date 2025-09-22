@@ -53,10 +53,10 @@ jobs:
           if (!(Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" | Out-Null }
           if (!(Test-Path "dist/index.html")) {
             @"
-<!doctype html>
-<html><head><meta charset="utf-8"><title>Glint</title></head>
-<body><h1>Glint</h1><p>CI fallback page.</p></body></html>
-"@ | Set-Content "dist/index.html" -Encoding UTF8
+              <!doctype html>
+              <html><head><meta charset="utf-8"><title>Glint</title></head>
+              <body><h1>Glint</h1><p>CI fallback page.</p></body></html>
+              "@ | Set-Content "dist/index.html" -Encoding UTF8
           }
           Write-Host "Dist contents:"
           Get-ChildItem -Recurse dist | Select-Object FullName
