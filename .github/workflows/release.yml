@@ -28,6 +28,11 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
+      - name: Install Tauri bundler deps
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          cargo install tauri-cli --locked
+
       # Create a CI-only tauri config that strips npm hooks completely
       - name: Create CI Tauri config (no npm)
         shell: pwsh
