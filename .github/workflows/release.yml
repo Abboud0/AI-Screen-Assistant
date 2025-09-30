@@ -42,6 +42,15 @@ jobs:
           }
           Write-Host "Dist contents:"; Get-ChildItem -Recurse dist | Select-Object FullName
 
+      - name: Set TAURI_CONFIG as inline JSON (no file)
+        shell: pwsh
+        run: |
+          # Single-quoted so $schema isn’t interpolated by PowerShell
+          $json = '{ "$schema":"https://schema.tauri.app/config/2","productName":"Glint","version":"0.1.0","identifier":"com.abbou.glint","build":{"frontendDist":"../dist"},"app":{"security":{"csp":null},"windows":[{"label":"main","title":"AI Screen Helper v0.1.0","url":"index.html"}]}}'
+          "TAURI_CONFIG=$json" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "TAURI_CONFIG (inline) length:" $json.Length
+          
+
       # Write a clean tauri.conf.json and verify it
       - name: Write & verify tauri.conf.json (no BOM, assert non-empty)
         shell: pwsh
@@ -84,7 +93,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_CONFIG: src-tauri/tauri.conf.json
+
 
       # Upload the produced installers
       - name: Upload build artifacts
