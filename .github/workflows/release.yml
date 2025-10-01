@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*'                 # build when you push a tag like v0.1.0
-  workflow_dispatch: {}      # allow manual runs from Actions tab
+  workflow_dispatch: {}      # allow manual runs
 
 permissions:
   contents: write
@@ -28,72 +28,60 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
-      # Ensure there is something to bundle (static frontend)
+      # Always give Tauri something to bundle
       - name: Ensure dist exists (fallback)
         shell: pwsh
         run: |
           if (!(Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" | Out-Null }
           if (!(Test-Path "dist/index.html")) {
-            @"
-              <!doctype html>
-              <html><head><meta charset="utf-8"><title>Glint</title></head>
-              <body><h1>Glint</h1><p>CI fallback page.</p></body></html>
-            "@ | Set-Content "dist/index.html" -Encoding UTF8
-          }
-          Write-Host "Dist contents:"; Get-ChildItem -Recurse dist | Select-Object FullName
+            @'
+            <!doctype html><html><head><meta charset="utf-8"><title>Glint</title></head>
+            <body><h1>Glint</h1><p>CI fallback page.</p></body></html>
+            '@ | Set-Content "dist/index.html" -Encoding UTF8
+                      }
+                      Write-Host "Dist contents:"; Get-ChildItem -Recurse dist | Select-Object FullName
 
-      - name: Set TAURI_CONFIG as inline JSON (no file)
-        shell: pwsh
-        run: |
-          # Single-quoted so $schema isn’t interpolated by PowerShell
-          $json = '{ "$schema":"https://schema.tauri.app/config/2","productName":"Glint","version":"0.1.0","identifier":"com.abbou.glint","build":{"frontendDist":"../dist"},"app":{"security":{"csp":null},"windows":[{"label":"main","title":"AI Screen Helper v0.1.0","url":"index.html"}]}}'
-          "TAURI_CONFIG=$json" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Write-Host "TAURI_CONFIG (inline) length:" $json.Length
-          
+                  # 🔒 Nuke any bad config and write a fresh, valid JSON (UTF-8 without BOM)
+                  - name: Force fresh tauri.conf.json (no BOM) and verify
+                    shell: pwsh
+                    run: |
+                      if (!(Test-Path "src-tauri")) { New-Item -ItemType Directory -Path "src-tauri" | Out-Null }
+                      if (Test-Path "src-tauri/tauri.conf.json") { Remove-Item -Force "src-tauri/tauri.conf.json" }
 
-      # Write a clean tauri.conf.json and verify it
-      - name: Write & verify tauri.conf.json (no BOM, assert non-empty)
-        shell: pwsh
-        run: |
-          $json = @'
-          {
-            "$schema": "https://schema.tauri.app/config/2",
-            "productName": "Glint",
-            "version": "0.1.0",
-            "identifier": "com.abbou.glint",
-            "build": { "frontendDist": "../dist" },
-            "app": {
-              "security": { "csp": null },
-              "windows": [ { "label": "main", "title": "AI Screen Helper v0.1.0", "url": "index.html" } ]
+                      $json = @'
+            {
+              "$schema": "https://schema.tauri.app/config/2",
+              "productName": "Glint",
+              "version": "0.1.0",
+              "identifier": "com.abbou.glint",
+              "build": { "frontendDist": "../dist" },
+              "app": {
+                "security": { "csp": null },
+                "windows": [ { "label": "main", "title": "AI Screen Helper v0.1.0", "url": "index.html" } ]
+              }
             }
-          }
           '@
-          if (!(Test-Path "src-tauri")) { New-Item -ItemType Directory -Path "src-tauri" | Out-Null }
-          $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
+          $utf8NoBom = New-Object System.Text.UTF8Encoding($false)  # no BOM
           [System.IO.File]::WriteAllText("src-tauri/tauri.conf.json", $json, $utf8NoBom)
 
-          # Assert it's there and non-empty
           if (!(Test-Path "src-tauri/tauri.conf.json")) { throw "tauri.conf.json missing after write" }
           $f = Get-Item "src-tauri/tauri.conf.json"
           Write-Host "tauri.conf.json size:" $f.Length "bytes"
-          if ($f.Length -lt 40) { throw "tauri.conf.json unexpectedly small; aborting" }
+          if ($f.Length -lt 80) { throw "tauri.conf.json unexpectedly small; aborting" }
 
-          # Show first line + hex of first 8 bytes (to prove no BOM)
-          $first = Get-Content -Raw "src-tauri/tauri.conf.json" | Select-Object -First 1
-          Write-Host "first chars:" $first.Substring(0, [Math]::Min(20, $first.Length))
           $bytes = [System.IO.File]::ReadAllBytes("src-tauri/tauri.conf.json")[0..7]
           $hex = ($bytes | ForEach-Object { $_.ToString("X2") }) -join " "
-          Write-Host "first 8 bytes (hex): $hex"
+          Write-Host "first 8 bytes (hex): $hex"  # must start with 7B (= '{')
 
-          # Make Tauri use this file
           "TAURI_CONFIG=src-tauri/tauri.conf.json" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      # Build with official action (installs WiX etc.)
-      - name: Build Tauri (Windows) via action
+      # Build with official action (handles WiX/bundler)
+      - name: Build Tauri (Windows)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          TAURI_CONFIG: src-tauri/tauri.conf.json
 
       # Upload the produced installers
       - name: Upload build artifacts
@@ -105,4 +93,3 @@ jobs:
             src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe
             src-tauri/target/release/bundle/**/*.zip
-
